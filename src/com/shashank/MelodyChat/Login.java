@@ -6,94 +6,111 @@ import java.awt.EventQueue;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-import javax.swing.JToggleButton;
+import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
-import javax.swing.JTextField;
-import javax.swing.JLabel;
 import javax.swing.JButton;
+import javax.swing.JLabel;
+import java.awt.event.ActionListener;
+import java.lang.reflect.InvocationTargetException;
+import java.awt.event.ActionEvent;
 
 public class Login extends JFrame {
 
 	private JPanel contentPane;
-	private JTextField txtName;
-	private JTextField textField;
-	private JTextField textField_1;
+	private JTextField textName;
+	private JTextField textAddress;
+	private JTextField textPort;
 
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					Login frame = new Login();
-					frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
+
 
 	/**
 	 * Create the frame.
 	 */
 	public Login() {
-		
+		setTitle("Login");
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} catch (ClassNotFoundException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (UnsupportedLookAndFeelException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		} 
 		setResizable(false);
-		setTitle(" Login");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 301, 381);
+		setBounds(100, 100, 407, 643);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 		
-		JLabel lblName = new JLabel("Name");
-		lblName.setBounds(129, 24, 56, 16);
-		contentPane.add(lblName);
+		textName = new JTextField();
+		textName.setBounds(102, 119, 196, 22);
+		contentPane.add(textName);
+		textName.setColumns(10);
+	
+		textAddress = new JTextField();
+		textAddress.setColumns(10);
+		textAddress.setBounds(102, 232, 196, 22);
+		contentPane.add(textAddress);
 		
-		txtName = new JTextField();
-		txtName.setBounds(88, 53, 141, 22);
-		contentPane.add(txtName);
-		txtName.setColumns(10);
-		
-		JLabel lblIpAddress = new JLabel("IP Address");
-		lblIpAddress.setBounds(129, 100, 86, 16);
-		contentPane.add(lblIpAddress);
-		
-		textField = new JTextField();
-		textField.setBounds(88, 129, 141, 22);
-		contentPane.add(textField);
-		textField.setColumns(10);
-		
-		JLabel lblPort = new JLabel("Port");
-		lblPort.setBounds(142, 183, 56, 16);
-		contentPane.add(lblPort);
-		
-		textField_1 = new JTextField();
-		textField_1.setBounds(88, 201, 141, 22);
-		contentPane.add(textField_1);
-		textField_1.setColumns(10);
+		textPort = new JTextField();
+		textPort.setColumns(10);
+		textPort.setBounds(102, 344, 196, 22);
+		contentPane.add(textPort);
 		
 		JButton btnLogin = new JButton("Login");
-		btnLogin.setBounds(107, 287, 97, 25);
+		btnLogin.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				String name=textName.getText();
+				String address=textAddress.getText();
+				int port=Integer.parseInt(textPort.getText());
+				doLogin(name, address, port);
+			}
+		});
+		btnLogin.setBounds(130, 495, 140, 41);
 		contentPane.add(btnLogin);
+		
+		JLabel lblName = new JLabel("Name");
+		lblName.setBounds(184, 90, 33, 16);
+		contentPane.add(lblName);
+		
+		JLabel lblAddress = new JLabel("Address");
+		lblAddress.setBounds(172, 203, 56, 16);
+		contentPane.add(lblAddress);
+		
+		JLabel lblPort = new JLabel("Port");
+		lblPort.setBounds(186, 314, 28, 16);
+		contentPane.add(lblPort);
 	}
+	
+	private void doLogin(String name, String address, int port) {
+		dispose();
+		new Client(name,address,port);
+		System.out.println(name + " "+ address+":"+port);
+	}
+	
+	/**
+	 * Launch the application.
+	 */
+	public static void main(String[] args) {
+		try {
+			EventQueue.invokeAndWait(new Runnable() {
+				public void run() {
+					try {
+						Login frame = new Login();
+						frame.setVisible(true);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			});
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 }
