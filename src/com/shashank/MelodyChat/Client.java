@@ -4,6 +4,12 @@ import java.awt.BorderLayout;
 import java.awt.EventQueue;
 import java.awt.TexturePaint;
 import java.awt.font.TextMeasurer;
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -16,6 +22,10 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.JButton;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
 public class Client extends JFrame {
 
@@ -26,12 +36,60 @@ public class Client extends JFrame {
 	private int port;
 	private JTextArea txtrHistory;
 	
+	private DatagramSocket socket; 
+	private InetAddress ip;
+	
+	private Thread send; 
+	
 	public Client(String name, String address, int port) {
-		/*this.name=name;
+		this.name=name;
 		this.address=address;
-		this.port=port;*/
+		this.port=port;
 		createClientWindow();
-		sendToHistory(name+" connected from ");
+		sendToHistory("Connecting to "+name+":"+port+" as "+name+"\r\n");
+	}
+	
+
+	
+	private boolean openConnection(String address, int port) {
+		try {
+			socket = new DatagramSocket();
+		} catch (SocketException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		try {
+			ip=InetAddress.getByName(address);
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return true;
+	}
+	
+	private String receive() {
+		byte[] data = new byte[1024];
+		DatagramPacket packet=new DatagramPacket(data, data.length);
+		try {
+			socket.receive(packet);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		String recvdMessage=new String(packet.getData());
+		return recvdMessage;
+	}
+	
+	private void send(final byte[] data) {
+		send = new Thread("Send") {
+			public void run() {
+				DatagramPacket packet = new DatagramPacket(data, data.length,ip,port);
+				try {
+					socket.send(packet);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		};
 	}
 	
 	private void createClientWindow() {
@@ -54,9 +112,22 @@ public class Client extends JFrame {
 		txtrHistory.setEditable(false);
 		
 		textMessage = new JTextField();
+		textMessage.addKeyListener(new KeyAdapter() {
+			public void keyPressed(KeyEvent e) {
+				if(e.getKeyCode()==KeyEvent.VK_ENTER) {
+					sendToHistory();
+				}
+			}
+		});
 		textMessage.setColumns(10);
 		
 		JButton btnSend = new JButton("Send");
+		
+		btnSend.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				sendToHistory();
+			}
+		});
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
 		gl_contentPane.setHorizontalGroup(
 			gl_contentPane.createParallelGroup(Alignment.LEADING)
@@ -84,11 +155,16 @@ public class Client extends JFrame {
 		
 	}
 	
-	public void sendToHistory(String message) {
+	private void sendToHistory(String message) {
 		if(message!=null){
-			txtrHistory.append(	message);
-		}
-		
+			txtrHistory.append(	message+"\r\n");
+		}	
+	}
+	
+	private void sendToHistory() {
+		String message = textMessage.getText();
+		txtrHistory.append("You: "+message+"\r\n");
+		textMessage.setText("");
 	}
 }
 
