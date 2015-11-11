@@ -13,6 +13,10 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import java.awt.event.ActionListener;
 import java.lang.reflect.InvocationTargetException;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.awt.event.ActionEvent;
 
 public class Login extends JFrame {
@@ -21,6 +25,8 @@ public class Login extends JFrame {
 	private JTextField textName;
 	private JTextField textAddress;
 	private JTextField textPort;
+	private DatagramSocket socket;
+	private InetAddress serverIp;
 
 
 
@@ -85,16 +91,29 @@ public class Login extends JFrame {
 	
 	private void doLogin(String name, String address, int port) {
 		dispose();
-		new Client(name,address,port);
-		System.out.println(name + " "+ address+":"+port);
+		if(openConnection()) { 
+			new Client(name,address, port, socket);
+			System.out.println(name + " "+ address+":"+port);
+		}
 	}
+	
+	private boolean openConnection() {
+		try {
+			socket = new DatagramSocket();
+		} catch (SocketException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return true;
+	}
+	
 	
 	/**
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
 		try {
-			EventQueue.invokeAndWait(new Runnable() {
+			EventQueue.invokeLater(new Runnable() {
 				public void run() {
 					try {
 						Login frame = new Login();
@@ -104,11 +123,8 @@ public class Login extends JFrame {
 					}
 				}
 			});
-		} catch (InvocationTargetException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
+		} catch (Exception e) {
+			
 			e.printStackTrace();
 		}
 	}

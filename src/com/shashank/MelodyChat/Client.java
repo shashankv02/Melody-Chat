@@ -5,11 +5,13 @@ import java.awt.EventQueue;
 import java.awt.TexturePaint;
 import java.awt.font.TextMeasurer;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -32,41 +34,34 @@ public class Client extends JFrame {
 	private JPanel contentPane;
 	private JTextField textMessage;
 	private String name;
-	private String address;
+	private String serverAddress;
 	private int port;
 	private JTextArea txtrHistory;
 	
-	private DatagramSocket socket; 
-	private InetAddress ip;
+	private InetAddress serverIp;
+	private Thread send;
+	private DatagramSocket socket;
 	
-	private Thread send; 
-	
-	public Client(String name, String address, int port) {
+	public Client(String name, String servrAddress, int port, DatagramSocket socket) {
 		this.name=name;
-		this.address=address;
+		this.serverAddress=serverAddress;
 		this.port=port;
+		this.socket=socket;
 		createClientWindow();
-		sendToHistory("Connecting to "+name+":"+port+" as "+name+"\r\n");
+		sendToHistory("Connecting to "+servrAddress+":"+port+" as "+name+"\r\n");
+		try {
+			serverIp=InetAddress.getByName(serverAddress);
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		}
+		//System.out.println("Constrcuting stringToServer");
+		String stringToServer = name +"connected from "+ serverAddress+":"+port;
+		send(stringToServer.getBytes());
 	}
 	
 
 	
-	private boolean openConnection(String address, int port) {
-		try {
-			socket = new DatagramSocket();
-		} catch (SocketException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		try {
-			ip=InetAddress.getByName(address);
-		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return true;
-	}
-	
+
 	private String receive() {
 		byte[] data = new byte[1024];
 		DatagramPacket packet=new DatagramPacket(data, data.length);
@@ -82,14 +77,17 @@ public class Client extends JFrame {
 	private void send(final byte[] data) {
 		send = new Thread("Send") {
 			public void run() {
-				DatagramPacket packet = new DatagramPacket(data, data.length,ip,port);
+				//System.out.println("Constructing packet to send");
+				DatagramPacket packet = new DatagramPacket(data,data.length,serverIp,port);
 				try {
+			//		System.out.println("calling send");
 					socket.send(packet);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
 		};
+		send.start();
 	}
 	
 	private void createClientWindow() {
@@ -115,7 +113,10 @@ public class Client extends JFrame {
 		textMessage.addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
 				if(e.getKeyCode()==KeyEvent.VK_ENTER) {
+					send((textMessage.getText()).getBytes());
 					sendToHistory();
+					//System.out.println(textMessage.getText());
+					
 				}
 			}
 		});
@@ -125,6 +126,8 @@ public class Client extends JFrame {
 		
 		btnSend.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+			
+				send((textMessage.getText()).getBytes());
 				sendToHistory();
 			}
 		});
