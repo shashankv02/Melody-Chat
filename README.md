@@ -15,10 +15,10 @@ A unique id is sent to client in a response message /c/uid. Client needs to stor
 eg: /c/1567
 
 ###Messages
-The messages from client that needs to be relayed to all the online clients have to be in the format /m/message.
+The messages from client that needs to be relayed to all the online clients have to be in the format /m/uid/message.
 Server reads the /m/ messages and sends them to all the other clients by appending the name of the originating client
 to the message.
-eg: /m/Hey!
+eg: /m/1567/Hey!
 
 ###Ping
 Server sends /p/ping messages every 3 seconds to clients to check if the client is alive. Server expects the client to
