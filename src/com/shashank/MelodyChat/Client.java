@@ -199,6 +199,7 @@ public class Client extends JFrame {
 	private void sendToHistory(String message) {
 		if(message!=null){
 			txtrHistory.append(message+"\r\n");
+			textMessage.setText("");
 		}	
 	}
 	

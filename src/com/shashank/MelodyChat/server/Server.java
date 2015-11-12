@@ -9,6 +9,7 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Scanner;
 
 import javax.xml.ws.handler.MessageContext;
 
@@ -35,11 +36,37 @@ public class Server implements Runnable {
 	}
 	
 	public void run() {
-		//running=true;
+		running=true;
 		System.out.println("Server started on port "+port);
-		//manageClients();
 		receive();
 		manageClients();
+		//Admin commands
+		Scanner s = new Scanner(System.in);
+		while(running) {
+			String cmd = s.nextLine();
+			if(cmd.equals("/users")) {
+				for(int i=0;i<clients.size();i++) {
+					System.out.println(i+" "+clients.get(i).name);
+				}
+			}
+			
+			else if(cmd.startsWith("/kick")) {
+				try {
+					int id = Integer.parseInt(cmd.substring(6));
+					int clientId = clients.get(id).getId();
+					handleDisconnect(clientId, 1);   //exception hanling for bad messages. parseInt throws exception for bad messages.
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			
+			else {
+				System.out.println("Available commands ");
+				System.out.println("/users - Lists online users");
+				System.out.println("/kick <id> - To kick user");
+			}
+			//s.close();
+		}
 		
 	}
 	
@@ -74,7 +101,7 @@ public class Server implements Runnable {
 		
 		if(string.startsWith("/p/")) {   //client ping responce message will be of format /p/uid
 			int clientUid=Integer.parseInt(string.substring(3));
-			System.out.println("recieved ping");
+			//System.out.println("recieved ping");
 			for(int i=0;i<clients.size();i++) {
 				if(clients.get(i).getId() == clientUid) {
 					clients.get(i).attempt = 0;
@@ -114,7 +141,7 @@ public class Server implements Runnable {
 		else if(string.startsWith("/d/")) {
 			int clientUid=Integer.parseInt(string.substring(3));
 			System.out.println("DC request from "+packet.getAddress().toString());
-			handleDisconnect(clientUid);
+			handleDisconnect(clientUid,0);
 		}
 		
 		else {
@@ -174,27 +201,37 @@ public class Server implements Runnable {
 		
 	}
 	
-	private void handleDisconnect(int uid) {
+	private void handleDisconnect(int uid, int reason) {
+		//reason codes: 0 for client dc, 1 for kick
 		boolean flag=false;
 		ClientDetails disconnectedClient=null;
 		for(int i=0;i<clients.size();i++) {
 			if(clients.get(i).getId() == uid) {
 				disconnectedClient = clients.get(i);
+				if(reason==1) {
+					send("You have been kicked by admin.", disconnectedClient.address,disconnectedClient.port);
+				}
 				clients.remove(i);
 				flag=true;
 				break;
 			}
 		}		
 		if(flag) {
-			String dcMessage=disconnectedClient.name+" has disconnected";
-			sendToAll("/m/"+dcMessage);
+			if(reason == 0) {
+				String dcMessage=disconnectedClient.name+" has disconnected.";
+				sendToAll("/m/"+dcMessage);
+			}
+			else if(reason == 1) {
+				String dcMessage=disconnectedClient.name+" has been kicked.";
+				sendToAll("/m/"+dcMessage);
+			}
+
+			}
 		}
-		
-	}
-	
-		
-		
-		
 }
+		
+		
+		
+
 
 
