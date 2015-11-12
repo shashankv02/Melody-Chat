@@ -39,13 +39,30 @@ public class Server implements Runnable {
 		System.out.println("Server started on port "+port);
 		//manageClients();
 		receive();
+		manageClients();
 		
 	}
 	
 	private void manageClients() {
 		manageTh = new Thread("Manage Thread") {
 			public void run () {
-				
+				while(running) {
+					sendToAll("/p/ping");
+					try {
+						sleep(2000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					for(int i=0;i<clients.size();i++) {
+						if(++(clients.get(i).attempt)>5) {
+							String name = clients.get(i).name;
+							clients.remove(i);
+							System.out.println(name+ " has timed out");
+							sendToAll("/m/"+name+ " has timed out");
+						}
+						
+					}
+				}
 			}
 		};
 		manageTh.start();
@@ -55,14 +72,31 @@ public class Server implements Runnable {
 	private void processData(DatagramPacket packet) {
 		String string = new String(packet.getData(),0,packet.getLength());
 		
-		if(string.startsWith("/m/")){
+		if(string.startsWith("/p/")) {   //client ping responce message will be of format /p/uid
+			int clientUid=Integer.parseInt(string.substring(3));
+			System.out.println("recieved ping");
+			for(int i=0;i<clients.size();i++) {
+				if(clients.get(i).getId() == clientUid) {
+					clients.get(i).attempt = 0;
+					break;
+				}
+			}
+		}
+		
+		else if(string.startsWith("/m/")){
 			String uidplusmessage = string.substring(3); //3 is begin index of the message. first 3 bytes are /m/
 			///m/4556/hey
 		//	String message=uidplusmessage.substring(2);
 			int clientUid = Integer.parseInt(uidplusmessage.split("/")[0]); 
 			String message = uidplusmessage.split("/")[1];
 			//System.out.println("clientUid");
-			String clientName = clients.get(clientUid).name;
+			String clientName="user";
+			for(int i=0;i<clients.size();i++) {
+				if(clients.get(i).getId() == clientUid) {
+					clientName = clients.get(i).name;
+					break;
+				}
+			}
 			//System.out.println(clientName);
 			sendToAll("/m/"+clientName+": "+message); 
 			//System.out.println("/m/"+clientName+": "+message);

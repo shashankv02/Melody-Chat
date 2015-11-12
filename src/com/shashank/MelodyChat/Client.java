@@ -78,7 +78,12 @@ public class Client extends JFrame {
 					}
 					String recvdMessage=new String(packet.getData(),0,packet.getLength());   //reconstructing problem
 					//return recvdMessage;
-					if(recvdMessage.startsWith("/m/")) {
+					
+					if(recvdMessage.startsWith("/p/")){
+						String responce = "/p/"+uid;
+						send(responce.getBytes());
+					}
+					else if(recvdMessage.startsWith("/m/")) {
 						sendToHistory(recvdMessage.substring(3));   
 					}
 					if(recvdMessage.startsWith("/c/")) {
