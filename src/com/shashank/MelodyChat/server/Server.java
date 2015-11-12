@@ -63,9 +63,9 @@ public class Server implements Runnable {
 			String message = uidplusmessage.split("/")[1];
 			//System.out.println("clientUid");
 			String clientName = clients.get(clientUid).name;
-			System.out.println(clientName);
+			//System.out.println(clientName);
 			sendToAll("/m/"+clientName+": "+message); 
-			System.out.println("/m/"+clientName+": "+message);
+			//System.out.println("/m/"+clientName+": "+message);
 		}
 		
 		else if(string.startsWith("/c/")){ 
@@ -77,6 +77,12 @@ public class Server implements Runnable {
 			send("/c/"+id, packet.getAddress(),packet.getPort());
 		}
 		
+		else if(string.startsWith("/d/")) {
+			int clientUid=Integer.parseInt(string.substring(3));
+			System.out.println("DC request from "+packet.getAddress().toString());
+			handleDisconnect(clientUid);
+		}
+		
 		else {
 			System.out.println("Unrecognized data");
 		}
@@ -86,7 +92,6 @@ public class Server implements Runnable {
 	private void sendToAll(String message) {
 		for(int i=0;i<clients.size();i++) {
 			ClientDetails client = clients.get(i);
-			System.out.println("Trying sendtoall");
 			send(message, client.address, client.port);
 		}
 	}
@@ -132,6 +137,24 @@ public class Server implements Runnable {
 			}
 		};
 		receiveTh.start();
+		
+	}
+	
+	private void handleDisconnect(int uid) {
+		boolean flag=false;
+		ClientDetails disconnectedClient=null;
+		for(int i=0;i<clients.size();i++) {
+			if(clients.get(i).getId() == uid) {
+				disconnectedClient = clients.get(i);
+				clients.remove(i);
+				flag=true;
+				break;
+			}
+		}		
+		if(flag) {
+			String dcMessage=disconnectedClient.name+" has disconnected";
+			sendToAll("/m/"+dcMessage);
+		}
 		
 	}
 	

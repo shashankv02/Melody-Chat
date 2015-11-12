@@ -28,6 +28,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class Client extends JFrame {
 
@@ -181,6 +183,11 @@ public class Client extends JFrame {
 		);
 		contentPane.setLayout(gl_contentPane);
 		textMessage.requestFocus();
+		addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+				sendDisconnect();
+			}
+		});
 		
 	}
 	
@@ -194,6 +201,11 @@ public class Client extends JFrame {
 		String message = textMessage.getText();
 		txtrHistory.append(message+"\r\n");
 		textMessage.setText("");
+	}
+	
+	private void sendDisconnect() {
+		String dcMessage="/d/"+uid;
+		send(dcMessage.getBytes());
 	}
 }
 

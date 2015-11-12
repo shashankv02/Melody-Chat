@@ -10,6 +10,7 @@ public class ClientDetails {
 	private final int Id;
 	public int attempt = 0;
 	
+	
 	public ClientDetails(String name, InetAddress address, int port, final int Id) {
 		this.name = name;
 		this.address = address;
