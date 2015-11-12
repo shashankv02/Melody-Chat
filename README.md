@@ -33,8 +33,11 @@ eg: /d/uid
 
 ###Admin options
 Following command line options are available for the server admin. 
+
 /users - List all the online users along with a id.  eg 0 Tom  1 Foo
+
 /kick <id> - Kicks the user corresponding to id.
+
 /quit - Shuts down the server. Sends a /d/ message to all connected clients.
 
 
