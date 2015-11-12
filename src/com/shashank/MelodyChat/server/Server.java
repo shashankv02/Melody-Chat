@@ -125,18 +125,23 @@ public class Server implements Runnable {
 			///m/4556/hey
 		//	String message=uidplusmessage.substring(2);
 			int clientUid = Integer.parseInt(uidplusmessage.split("/")[0]); 
-			String message = uidplusmessage.split("/")[1];
-			//System.out.println("clientUid");
-			String clientName="user";
-			for(int i=0;i<clients.size();i++) {
-				if(clients.get(i).getId() == clientUid) {
-					clientName = clients.get(i).name;
-					break;
+			try {
+				String message = uidplusmessage.split("/")[1];
+				String clientName="user";
+				for(int i=0;i<clients.size();i++) {
+					if(clients.get(i).getId() == clientUid) {
+						clientName = clients.get(i).name;
+						break;
+					}
 				}
+				
+				sendToAll("/m/"+clientName+": "+message); 
+				
+
+			} catch (ArrayIndexOutOfBoundsException e) {
+				//Do nothing
 			}
-			//System.out.println(clientName);
-			sendToAll("/m/"+clientName+": "+message); 
-			//System.out.println("/m/"+clientName+": "+message);
+
 		}
 		
 		else if(string.startsWith("/c/")){ 
