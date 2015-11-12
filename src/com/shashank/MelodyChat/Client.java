@@ -38,9 +38,11 @@ public class Client extends JFrame {
 	private int port;
 	private JTextArea txtrHistory;
 	
+	private Thread recv;
 	private InetAddress serverIp;
 	private Thread send;
 	private DatagramSocket socket;
+	private int uid;
 	
 	public Client(String name, String servrAddress, int port, DatagramSocket socket) {
 		this.name=name;
@@ -57,22 +59,39 @@ public class Client extends JFrame {
 		//System.out.println("Constrcuting stringToServer");
 		String connectString = "/c/"+name;
 		send(connectString.getBytes());
+		receive();
 	}
 	
 
-	
-
-	private String receive() {
-		byte[] data = new byte[1024];
-		DatagramPacket packet=new DatagramPacket(data, data.length);
-		try {
-			socket.receive(packet);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		String recvdMessage=new String(packet.getData());
-		return recvdMessage;
+	private void receive() {
+		recv = new Thread("Client Listen Thread") {
+			public void run() {
+				while(true){
+					byte[] data = new byte[1024];
+					DatagramPacket packet=new DatagramPacket(data, data.length);
+					try {
+						socket.receive(packet);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					String recvdMessage=new String(packet.getData(),0,packet.getLength());   //reconstructing problem
+					//return recvdMessage;
+					if(recvdMessage.startsWith("/m/")) {
+						sendToHistory(recvdMessage.substring(3));   
+					}
+					if(recvdMessage.startsWith("/c/")) {
+						uid=Integer.parseInt(recvdMessage.substring(3, recvdMessage.length()));
+						sendToHistory("Connected to Server");
+					}
+				}
+				
+			}
+		};
+		recv.start();
+				
 	}
+		
+	
 	
 	private void send(final byte[] data) {
 		send = new Thread("Send") {
@@ -88,6 +107,12 @@ public class Client extends JFrame {
 			}
 		};
 		send.start();
+	}
+	
+	private String collectMessage() {
+		String message = textMessage.getText();
+		message="/m/"+uid+"/"+message;
+		return message;
 	}
 	
 	private void createClientWindow() {
@@ -113,8 +138,9 @@ public class Client extends JFrame {
 		textMessage.addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
 				if(e.getKeyCode()==KeyEvent.VK_ENTER) {
-					send((textMessage.getText()).getBytes());
-					sendToHistory();
+					String message = collectMessage();
+					send(message.getBytes());
+					//sendToHistory();
 					//System.out.println(textMessage.getText());
 					
 				}
@@ -127,7 +153,7 @@ public class Client extends JFrame {
 		btnSend.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 			
-				send((textMessage.getText()).getBytes());
+				send(collectMessage().getBytes());
 				sendToHistory();
 			}
 		});
@@ -160,13 +186,13 @@ public class Client extends JFrame {
 	
 	private void sendToHistory(String message) {
 		if(message!=null){
-			txtrHistory.append(	message+"\r\n");
+			txtrHistory.append(message+"\r\n");
 		}	
 	}
 	
 	private void sendToHistory() {
 		String message = textMessage.getText();
-		txtrHistory.append("You: "+message+"\r\n");
+		txtrHistory.append(message+"\r\n");
 		textMessage.setText("");
 	}
 }

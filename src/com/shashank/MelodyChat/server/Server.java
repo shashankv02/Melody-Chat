@@ -4,10 +4,13 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import javax.xml.ws.handler.MessageContext;
 
 public class Server implements Runnable {
 	
@@ -15,6 +18,7 @@ public class Server implements Runnable {
 	private Thread serverTh, manageTh, sendTh, receiveTh;
 	private boolean running = true;
 	private int port;
+	
 	
 	private List<ClientDetails> clients = new ArrayList<ClientDetails>();
 	
@@ -50,17 +54,59 @@ public class Server implements Runnable {
 	
 	private void processData(DatagramPacket packet) {
 		String string = new String(packet.getData(),0,packet.getLength());
-		if(string.startsWith("/c/")){ 
+		
+		if(string.startsWith("/m/")){
+			String uidplusmessage = string.substring(3); //3 is begin index of the message. first 3 bytes are /m/
+			///m/4556/hey
+		//	String message=uidplusmessage.substring(2);
+			int clientUid = Integer.parseInt(uidplusmessage.split("/")[0]); 
+			String message = uidplusmessage.split("/")[1];
+			//System.out.println("clientUid");
+			String clientName = clients.get(clientUid).name;
+			System.out.println(clientName);
+			sendToAll("/m/"+clientName+": "+message); 
+			System.out.println("/m/"+clientName+": "+message);
+		}
+		
+		else if(string.startsWith("/c/")){ 
 			int id = UniqueIdentifier.getIdentifier(); //Don't call this method carelessly.. Each call returns a new id.
 			String name = string.substring(3,string.length());
 			clients.add(new ClientDetails(name,packet.getAddress(),packet.getPort(),id));
 			System.out.println(name+" connected from "+packet.getAddress().toString()+":"+packet.getPort());
 			System.out.println("Added "+name+" to client list, UID: "+id);
-		}
-		else {
-			System.out.println(string);
+			send("/c/"+id, packet.getAddress(),packet.getPort());
 		}
 		
+		else {
+			System.out.println("Unrecognized data");
+		}
+		
+	}
+	
+	private void sendToAll(String message) {
+		for(int i=0;i<clients.size();i++) {
+			ClientDetails client = clients.get(i);
+			System.out.println("Trying sendtoall");
+			send(message, client.address, client.port);
+		}
+	}
+	
+	private void send(String message, InetAddress address, int port) {
+		sendTh = new Thread("Send Thread") {
+			public void run() {
+				byte[] data = new byte[1024];
+				data = message.getBytes();
+				DatagramPacket packet = new DatagramPacket(data,data.length);
+				packet.setAddress(address);
+				packet.setPort(port);
+				try {
+					socket.send(packet);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		};
+		sendTh.start();
 	}
 	
 	private void receive() {
