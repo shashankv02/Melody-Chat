@@ -5,7 +5,9 @@ import java.io.UnsupportedEncodingException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class Server implements Runnable {
 	
@@ -13,6 +15,8 @@ public class Server implements Runnable {
 	private Thread serverTh, manageTh, sendTh, receiveTh;
 	private boolean running = true;
 	private int port;
+	
+	private List<ClientDetails> clients = new ArrayList<ClientDetails>();
 	
 	public Server(int port) {
 		this.port=port;
@@ -44,11 +48,24 @@ public class Server implements Runnable {
 		
 	}
 	
+	private void processData(DatagramPacket packet) {
+		String string = new String(packet.getData(),0,packet.getLength());
+		if(string.startsWith("/c/")){ 
+			clients.add(new ClientDetails(string.substring(3,string.length()),packet.getAddress(),packet.getPort(),600));
+			System.out.println("Added new client to list");
+			System.out.println(clients.get(0).address.toString()+":"+clients.get(0).port);
+		}
+		else {
+			System.out.println(string);
+		}
+		
+	}
+	
 	private void receive() {
-		System.out.println("Inside receive function");
+		//System.out.println("Inside receive function");
 		receiveTh = new Thread("Receive Thread") {
 			public void run() { 
-				System.out.println("Inside receive thread");
+				//System.out.println("Inside receive thread");
 				//Implement receive
 				while(running) {
 					//System.out.println("Inside receive thread loop");
@@ -62,9 +79,7 @@ public class Server implements Runnable {
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
-						String string = new String(data, 0,packet.getLength());   //AWESOME 
-						System.out.println(string);
-					
+					processData(packet);
 				}
 			}
 		};

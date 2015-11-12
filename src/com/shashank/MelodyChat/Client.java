@@ -55,8 +55,8 @@ public class Client extends JFrame {
 			e.printStackTrace();
 		}
 		//System.out.println("Constrcuting stringToServer");
-		String stringToServer = name +"connected from "+ serverAddress+":"+port;
-		send(stringToServer.getBytes());
+		String connectString = "/c/"+name;
+		send(connectString.getBytes());
 	}
 	
 

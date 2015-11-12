@@ -100,6 +100,7 @@ public class Login extends JFrame {
 	private boolean openConnection() {
 		try {
 			socket = new DatagramSocket();
+			
 		} catch (SocketException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
