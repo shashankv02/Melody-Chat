@@ -51,9 +51,11 @@ public class Server implements Runnable {
 	private void processData(DatagramPacket packet) {
 		String string = new String(packet.getData(),0,packet.getLength());
 		if(string.startsWith("/c/")){ 
-			clients.add(new ClientDetails(string.substring(3,string.length()),packet.getAddress(),packet.getPort(),600));
-			System.out.println("Added new client to list");
-			System.out.println(clients.get(0).address.toString()+":"+clients.get(0).port);
+			int id = UniqueIdentifier.getIdentifier(); //Don't call this method carelessly.. Each call returns a new id.
+			String name = string.substring(3,string.length());
+			clients.add(new ClientDetails(name,packet.getAddress(),packet.getPort(),id));
+			System.out.println(name+" connected from "+packet.getAddress().toString()+":"+packet.getPort());
+			System.out.println("Added "+name+" to client list, UID: "+id);
 		}
 		else {
 			System.out.println(string);
