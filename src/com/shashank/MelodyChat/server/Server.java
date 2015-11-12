@@ -11,13 +11,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
+import javax.lang.model.element.QualifiedNameable;
 import javax.xml.ws.handler.MessageContext;
 
 public class Server implements Runnable {
 	
 	private DatagramSocket socket;
 	private Thread serverTh, manageTh, sendTh, receiveTh;
-	private boolean running = true;
+	private boolean running = false;
 	private int port;
 	
 	
@@ -60,13 +61,22 @@ public class Server implements Runnable {
 				}
 			}
 			
+			else if(cmd.equals("/quit")) {
+				//send disconnect messages to clients
+					sendToAll("/d/");
+					running = false;
+					System.exit(0);
+				}
+			
 			else {
 				System.out.println("Available commands ");
 				System.out.println("/users - Lists online users");
 				System.out.println("/kick <id> - To kick user");
+				System.out.println("/quit to shutdown server");
 			}
-			//s.close();
 		}
+		s.close();
+
 		
 	}
 	

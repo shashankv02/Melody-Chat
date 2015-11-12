@@ -86,9 +86,12 @@ public class Client extends JFrame {
 					else if(recvdMessage.startsWith("/m/")) {
 						sendToHistory(recvdMessage.substring(3));   
 					}
-					if(recvdMessage.startsWith("/c/")) {
+					else if(recvdMessage.startsWith("/c/")) {
 						uid=Integer.parseInt(recvdMessage.substring(3, recvdMessage.length()));
 						sendToHistory("Connected to Server");
+					}
+					else if(recvdMessage.startsWith("/d/")) {
+						sendToHistory("Server shutting down");
 					}
 				}
 				
